@@ -1,10 +1,12 @@
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart' as foundation;
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:friendlystore/cookingTimer.dart';
 import 'package:friendlystore/seasonalCookingPage.dart';
 import 'package:friendlystore/user.dart';
 import 'package:provider/provider.dart';
@@ -18,6 +20,7 @@ import 'mentPage.dart';
 import 'dialog.dart';
 import 'main.dart';
 import 'seasonalFoodPage.dart';
+import 'cookingTimer.dart';
 import 'dart:math';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -391,7 +394,7 @@ class _MainPageState extends State<MainPage>
                         )
                     ),
                     const SizedBox(
-                      height: 80,
+                      height: 25,
                     ),
                     // 오늘의추천요리
                     Container(
@@ -403,13 +406,13 @@ class _MainPageState extends State<MainPage>
                         children: [
                           Container(
                             width: menuWidth * 0.5,
-                            height: 70,
-                            alignment: Alignment.bottomLeft,
+                            height: 60,
+                            alignment: Alignment.bottomRight,
                             child: Image.asset('assets/recommendIcon.png', fit:BoxFit.contain),
                           ),
                           Container(
                             width: menuWidth * 0.5,
-                            height: 140,
+                            height: 120,
                             alignment: Alignment.center,
                             child: FadeTransition(
                               opacity: _animation,
@@ -435,9 +438,78 @@ class _MainPageState extends State<MainPage>
                       ),
                     ),
                     const SizedBox(
-                      height: 45,
+                      height: 50,
                     ),
-                    // 메뉴
+                    //메뉴1
+                    Container(
+                      width: menuWidth,
+                      height: 90,
+                      alignment: Alignment.center,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Container(
+                            width: menuWidth * 0.3,
+                            child: TextButton(
+                              onPressed: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => CookingTimer(),
+                                  ),
+                                );
+                              },
+                              style: TextButton.styleFrom(padding: EdgeInsets.zero),
+                              child: Image.asset('assets/card01.png', fit: BoxFit.contain),
+                            ),
+                          ),
+                          SizedBox(
+                            width: menuWidth * 0.05,
+                          ),
+                          Container(
+                            width: menuWidth * 0.3,
+                            child: TextButton(
+                              onPressed: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => SeasonalCooking(),
+                                  ),
+                                );
+                              },
+                              style: TextButton.styleFrom(padding: EdgeInsets.zero),
+                              child: Image.asset('assets/card02.png', fit: BoxFit.contain),
+                            ),
+                          ),
+                          SizedBox(
+                            width: menuWidth * 0.05,
+                          ),
+                          Container(
+                            width: menuWidth * 0.3,
+                            child: TextButton(
+                                onPressed: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => MentPage(),
+                                    ),
+                                  );
+                                },
+                                style: TextButton.styleFrom(padding: EdgeInsets.zero),
+                                child:
+                                isUpdate ?
+                                ScaleTransition(scale: _cardAnimation,
+                                  child: Image.asset('assets/card03After.png', fit: BoxFit.contain,),)
+                                    :  Image.asset('assets/card03.png', fit: BoxFit.contain)
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(
+                      height: 20,
+                    ),
+                    // 메뉴2
                     Container(
                       width: menuWidth,
                       height: 90,
@@ -504,7 +576,7 @@ class _MainPageState extends State<MainPage>
                       ),
                     ),
                     const SizedBox(
-                      height: 22,
+                      height: 25,
                     ),
                     // 배너
                     Container(
