@@ -1,0 +1,54 @@
+{
+  "project_info": {
+    "project_number": "1041664197972",
+    "project_id": "friendly-book-f13f9",
+    "storage_bucket": "friendly-book-f13f9.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1041664197972:android:f4b0d7a135b24adeb674c1",
+        "android_client_info": {
+          "package_name": "com.friendly.book.friendlybook"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCHASPQwZm60aeNfBb5RP4dVtRhlA-J-Tc"
+        },
+        {
+          "current_key": "AIzaSyBD5dB5HyZoB30wN9GE12o6AOI-jHFqcHI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1041664197972:android:bd656bc46dcc4421b674c1",
+        "android_client_info": {
+          "package_name": "com.friendlystore.naver.friendlystore"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCHASPQwZm60aeNfBb5RP4dVtRhlA-J-Tc"
+        },
+        {
+          "current_key": "AIzaSyBD5dB5HyZoB30wN9GE12o6AOI-jHFqcHI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
