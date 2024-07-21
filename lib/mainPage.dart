@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:friendlystore/cookingTimer.dart';
+import 'package:friendlystore/memoPage.dart';
 import 'package:friendlystore/seasonalCookingPage.dart';
 import 'package:friendlystore/user.dart';
 import 'package:provider/provider.dart';
@@ -473,7 +474,7 @@ class _MainPageState extends State<MainPage>
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (context) => SeasonalCooking(),
+                                    builder: (context) => MemoPage(),
                                   ),
                                 );
                               },

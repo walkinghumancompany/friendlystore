@@ -15,6 +15,7 @@ class DetailPage extends StatefulWidget {
 class _DetailPageState extends State<DetailPage> {
 
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+
   Future<void> _addToLikes(String code, int index) async {
 
     final _userCode = _firestore.collection('users');
