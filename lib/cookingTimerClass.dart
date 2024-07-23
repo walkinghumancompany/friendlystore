@@ -10,9 +10,11 @@ class CookingTimerClass extends StatefulWidget {
   State<CookingTimerClass> createState() => _CookingTimerClassState();
 }
 
-class _CookingTimerClassState extends State<CookingTimerClass> {
+class _CookingTimerClassState extends State<CookingTimerClass> with SingleTickerProviderStateMixin {
 
   final AudioPlayer audioPlayer = AudioPlayer();
+  late AnimationController _shakeController;
+  late Animation<double> _shakeAnimation;
 
   int sec = 0;
   int min = 0;
@@ -29,22 +31,39 @@ class _CookingTimerClassState extends State<CookingTimerClass> {
     super.initState();
     _updateDisplayStrings();
     _loadAudio();
-  }
 
-  Future<void> _loadAudio() async {
-    await audioPlayer.setSource(AssetSource('alarm.mp3'));
-    await audioPlayer.setReleaseMode(ReleaseMode.loop); // 루프 모드 설정
+    _shakeController = AnimationController(
+      duration: const Duration(milliseconds: 100),
+      vsync: this,
+    );
+
+    _shakeAnimation = Tween<double>(begin: -0.02, end: 0.02).animate(
+      CurvedAnimation(
+        parent: _shakeController,
+        curve: Curves.easeInOut,
+      ),
+    );
+
+    _shakeController.addStatusListener((status) {
+      if (status == AnimationStatus.completed) {
+        _shakeController.reverse();
+      } else if (status == AnimationStatus.dismissed) {
+        _shakeController.forward();
+      }
+    });
   }
 
   void _playAlarm() async {
     if (!isAlarmPlaying) {
       isAlarmPlaying = true;
-      await audioPlayer.resume(); // play() 대신 resume() 사용
+      await audioPlayer.resume();
 
       bool hasVibrator = await Vibration.hasVibrator() ?? false;
       if (hasVibrator) {
-        Vibration.vibrate(pattern: [500, 1000, 500, 1000]); // 진동 패턴 설정
+        Vibration.vibrate(pattern: [500, 1000, 500, 1000]);
       }
+
+      _shakeController.forward(); // 알람이 울릴 때 애니메이션 시작
     }
   }
 
@@ -53,8 +72,14 @@ class _CookingTimerClassState extends State<CookingTimerClass> {
       audioPlayer.pause();
       Vibration.cancel();
       isAlarmPlaying = false;
+      _shakeController.stop(); // 알람이 멈출 때 애니메이션 정지
     }
   }
+  Future<void> _loadAudio() async {
+    await audioPlayer.setSource(AssetSource('alarm.mp3'));
+    await audioPlayer.setReleaseMode(ReleaseMode.loop); // 루프 모드 설정
+  }
+
 
   void _updateDisplayStrings() {
     displaySec = sec.toString().padLeft(2, '0');
@@ -160,11 +185,12 @@ class _CookingTimerClassState extends State<CookingTimerClass> {
 
   @override
   void dispose() {
+    _shakeController.dispose();
     audioPlayer.dispose();
     if (isRunning) {
       timer.cancel();
     }
-    Vibration.cancel(); // 진동 정지
+    Vibration.cancel();
     super.dispose();
   }
 
@@ -443,20 +469,46 @@ class _CookingTimerClassState extends State<CookingTimerClass> {
           ),
         ),
         const SizedBox(
-          height: 10,
+          height: 20,
         ),
         Container(
-          alignment: Alignment.center,
-          width: width,
+            alignment: Alignment.center,
+            width: width,
+            height: 55,
+            child:
+            Row(
+              children: [
+                Container(
+                  width: width * 0.4,
+                  padding: EdgeInsets.only(right: 0),
+                  child: AnimatedBuilder(
+                    animation: _shakeAnimation,
+                    builder: (context, child) {
+                      return Transform.rotate(
+                        angle: _shakeAnimation.value,
+                        child: child,
+                      );
+                    },
+                    child: Image.asset('assets/CookingAlarm.png', fit: BoxFit.contain),
+                  ),
+                ),
+                Container(
+                  width: width * 0.6,
+                  padding: EdgeInsets.only(left: 5),
+                  child: const Text('알람이 울리면 중지버튼을 클릭해 주세요.',
+                    style: TextStyle(
+                        fontFamily: 'AppleSDGothicNeo',
+                        fontWeight: FontWeight.w500,
+                        fontSize: 12,
+                        color: Colors.grey
+                    ),
+                  ),
+                )
+              ],
+            )
+        ),
+        const SizedBox(
           height: 20,
-          child: const Text('알람이 울리면 중지버튼을 클릭해 주세요.',
-            style: TextStyle(
-                fontFamily: 'AppleSDGothicNeo',
-                fontWeight: FontWeight.w500,
-                fontSize: 12,
-                color: Colors.grey
-            ),
-          ),
         )
       ],
     );

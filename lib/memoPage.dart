@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:friendlystore/providers/userProvider.dart';
 import 'package:provider/provider.dart';
@@ -14,7 +15,7 @@ class MemoPage extends StatefulWidget {
   State<MemoPage> createState() => _MemoPageState();
 }
 
-class _MemoPageState extends State<MemoPage> {
+class _MemoPageState extends State<MemoPage> with TickerProviderStateMixin {
 
   bool _isMemoLoad = false;
   bool _isSetMemo = false;
@@ -27,11 +28,25 @@ class _MemoPageState extends State<MemoPage> {
   List<String> completedItems = [];
   List<FoodItem> allFoodItems = [];
   List<String> seasonalSuggestions = [];
+  late AnimationController _controller;
+  late Animation<double> _animation;
 
 
   @override
   void initState() {
     super.initState();
+    _controller = AnimationController(
+      duration: const Duration(seconds: 1), // 애니메이션 주기를 2초로 설정
+      vsync: this,
+    )..repeat(reverse: true);
+
+    _animation = Tween<double>(
+      begin: 0.2, // 최소 불투명도 (가장 흐릴 때)
+      end: 1.0,   // 최대 불투명도 (가장 선명할 때)
+    ).animate(CurvedAnimation(
+      parent: _controller,
+      curve: Curves.easeInOut, // 부드러운 전환을 위한 곡선
+    ));
     loadCartMemo();
     loadSeasonalSuggestions();
   }
@@ -163,6 +178,12 @@ class _MemoPageState extends State<MemoPage> {
   }
 
   @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     double width = MediaQuery.of(context).size.width;
     return Scaffold(
@@ -198,7 +219,7 @@ class _MemoPageState extends State<MemoPage> {
               child: Column(
                 children: [
                   const SizedBox(
-                    height: 70,
+                    height: 78,
                   ),
                   Container(
                     width: width,
@@ -335,14 +356,21 @@ class _MemoPageState extends State<MemoPage> {
                         ),
                         if(completedItems.isNotEmpty)
                           Container(
-                            alignment: Alignment.center,
-                            width: width,
+                            width: width * 0.9,
                             height: 25,
+                            alignment: Alignment.centerRight, // 이 줄을 추가합니다
                             child: GestureDetector(
                               onTap: () async {
                                 await deleteCompletedItems();
                               },
-                              child: Image.asset('assets/resetIcon.png', fit: BoxFit.contain),
+                              child: Padding(
+                                padding: EdgeInsets.only(right: 5),
+                                child: Image.asset(
+                                  'assets/resetIcon.png',
+                                  height: 25,
+                                  fit: BoxFit.contain,
+                                ),
+                              ),
                             ),
                           )
                         else Container()
@@ -478,6 +506,18 @@ class _MemoPageState extends State<MemoPage> {
                         SizedBox(height: 15),
                         Container(
                           width: width * 0.9,
+                          decoration: BoxDecoration(
+                            color: Color(0xffF1EEDE), // 배경색
+                            borderRadius: BorderRadius.circular(10), // 모서리 둥글게
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.grey.withOpacity(0.5), // 그림자 색
+                                spreadRadius: 1, // 그림자 범위
+                                blurRadius: 3, // 흐림 정도
+                                offset: Offset(0, 3), // 그림자 위치
+                              ),
+                            ],
+                          ),
                           child: Wrap(
                             spacing: 8,
                             runSpacing: 4,
@@ -501,14 +541,21 @@ class _MemoPageState extends State<MemoPage> {
                         ),
                         if(completedItems.isNotEmpty)
                           Container(
-                            alignment: Alignment.center,
-                            width: width,
+                            width: width * 0.9,
                             height: 25,
+                            alignment: Alignment.centerRight, // 이 줄을 추가합니다
                             child: GestureDetector(
                               onTap: () async {
                                 await deleteCompletedItems();
                               },
-                              child: Image.asset('assets/resetIcon.png', fit: BoxFit.contain),
+                              child: Padding(
+                                padding: EdgeInsets.only(right: 5),
+                                child: Image.asset(
+                                  'assets/resetIcon.png',
+                                  height: 25,
+                                  fit: BoxFit.contain,
+                                ),
+                              ),
                             ),
                           )
                         else Container()
@@ -651,14 +698,20 @@ class _MemoPageState extends State<MemoPage> {
                         ),
                         if(completedItems.isNotEmpty)
                           Container(
-                            alignment: Alignment.center,
-                            width: width,
-                            height: 25,
+                            width: width * 0.9,
+                            alignment: Alignment.centerRight, // 이 줄을 추가합니다
                             child: GestureDetector(
                               onTap: () async {
                                 await deleteCompletedItems();
                               },
-                              child: Image.asset('assets/resetIcon.png', fit: BoxFit.contain),
+                              child: Padding(
+                                padding: EdgeInsets.only(right: 5),
+                                child: Image.asset(
+                                  'assets/resetIcon.png',
+                                  height: 25,
+                                  fit: BoxFit.contain,
+                                ),
+                              ),
                             ),
                           )
                         else Container()
@@ -673,52 +726,61 @@ class _MemoPageState extends State<MemoPage> {
               top: 25,
               right: 10,
               child: Container(
-                width: 120,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,  // 변경: center에서 end로
+                width: 180,
+                padding: EdgeInsets.only(right: 20),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
                   children: [
-                    Container(
-                      width: double.infinity,  // 추가: 전체 너비를 사용하도록 설정
-                      child: const Text('제철 식재료 추천',
-                        style: TextStyle(
-                            fontFamily: 'AppleSDGothicNeo',
-                            fontWeight: FontWeight.w400,
-                            fontSize: 12.7,
-                            color: Colors.grey
-                        ),
-                        textAlign: TextAlign.right,  // 제목은 중앙 정렬 유지
-                      ),
-                    ),
-                    SizedBox(height: 8),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.end,  // 변경: 오른쪽 정렬
-                      children: seasonalSuggestions.map((item) => Padding(
-                        padding: EdgeInsets.only(bottom: 8),
-                        child: InkWell(
-                          onTap: () {
-                            setState(() {
-                              String currentText = writeController.text;
-                              if (currentText.isNotEmpty && !currentText.endsWith(' ')) {
-                                currentText += ' ';
-                              }
-                              writeController.text = currentText + item;
-                            });
-                          },
+                    AnimatedBuilder(
+                      animation: _animation,
+                      builder: (context, child) {
+                        return Opacity(
+                          opacity: _animation.value,
                           child: Container(
-                            padding: EdgeInsets.symmetric(vertical: 6, horizontal: 10),
-                            decoration: BoxDecoration(
-                              color: Colors.green.withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(15),
-                              border: Border.all(color: Colors.grey),
-                            ),
-                            child: Text(
-                              item,
-                              style: TextStyle(fontSize: 12),
-                              textAlign: TextAlign.right,  // 변경: center에서 right로
+                            alignment: Alignment.topCenter,
+                            width: 40,
+                            child: Image.asset(
+                              'assets/SeasonMemo.png',
+                              fit: BoxFit.contain,
                             ),
                           ),
-                        ),
-                      )).toList(),
+                        );
+                      },
+                    ),
+                    const SizedBox(
+                      width: 5,
+                    ),
+                    Container(
+                      child: Column(
+                        children:
+                          seasonalSuggestions.map((item) => Padding(
+                            padding: EdgeInsets.only(bottom: 8),
+                            child: InkWell(
+                              onTap: () {
+                                setState(() {
+                                  String currentText = writeController.text;
+                                  if (currentText.isNotEmpty && !currentText.endsWith(' ')) {
+                                    currentText += ' ';
+                                  }
+                                  writeController.text = currentText + item;
+                                });
+                              },
+                              child: Container(
+                                padding: EdgeInsets.symmetric(vertical: 6, horizontal: 10),
+                                decoration: BoxDecoration(
+                                  color: Color(0xFFFF8B00).withOpacity(0.1),
+                                  borderRadius: BorderRadius.circular(15),
+                                  border: Border.all(color: Colors.grey),
+                                ),
+                                child: Text(
+                                  item,
+                                  style: TextStyle(fontSize: 12),
+                                  textAlign: TextAlign.right,  // 변경: center에서 right로
+                                ),
+                              ),
+                            ),
+                          )).toList(),
+                      )
                     ),
                   ],
                 ),
