@@ -65,6 +65,32 @@ class _DetailPageState extends State<DetailPage> {
 
   bool isLiked = false;
 
+  Future<void> _setYummy(String code, int index) async {
+    final _userCode = _firestore.collection('users');
+    QuerySnapshot<Map<String, dynamic>> userSnapshot = await _userCode.where('code', isEqualTo: code).get();
+
+    if (userSnapshot.docs.isEmpty) {
+      print('No user found with code: $code');
+      return;
+    }
+
+    // 사용자 문서 참조 가져오기
+    DocumentReference userDocRef = userSnapshot.docs.first.reference;
+
+    // 현재 날짜 가져오기
+    DateTime now = DateTime.now();
+    String formattedDate = "${now.year}/${now.month.toString().padLeft(2, '0')}/${now.day.toString().padLeft(2, '0')}";
+
+    // yummy 하위 컬렉션에 문서 추가
+    await userDocRef.collection('yummy').add({
+      'date': formattedDate,
+      'index': index,
+      'timestamp': FieldValue.serverTimestamp(),
+    });
+
+    print('Yummy added for user $code with index $index on $formattedDate');
+  }
+
 
   @override
   void initState() {
@@ -149,11 +175,11 @@ class _DetailPageState extends State<DetailPage> {
                 children: [
                   Container(
                     width: MediaQuery.of(context).size.width * 0.3,
-                    height: 52,
+                    height: 62,
                   ),
                   Container(
                     width: MediaQuery.of(context).size.width * 0.4,
-                    height: 52,
+                    height: 62,
                     alignment: Alignment.center,
                     child: Text(textName!,
                       textAlign: TextAlign.center,
@@ -166,13 +192,31 @@ class _DetailPageState extends State<DetailPage> {
                       await _addToLikes(_userProvider.user.code, index!);
                     },
                     child: Container(
-                      width: MediaQuery.of(context).size.width * 0.3,
+                      width: MediaQuery.of(context).size.width * 0.13,
+                      height: 62,
+                      alignment: Alignment.center,
+                      child: Image.asset(isLiked ? 'assets/afterLikebutton.png' : 'assets/beforeLikebutton.png',
+                        fit: BoxFit.contain, height: 52,),
+                    ),
+                  ),
+                  SizedBox(
+                    width: MediaQuery.of(context).size.width * 0.02,
+                  ),
+                  GestureDetector(
+                    onTap: () async {
+                      await _setYummy(_userProvider.user.code!, index);
+                    },
+                    child: Container(
+                      width: MediaQuery.of(context).size.width * 0.13,
                       height: 52,
                       alignment: Alignment.center,
                       child: Image.asset(isLiked ? 'assets/afterLikebutton.png' : 'assets/beforeLikebutton.png',
                         fit: BoxFit.contain, height: 52,),
                     ),
                   ),
+                  SizedBox(
+                    width: MediaQuery.of(context).size.width * 0.02,
+                  )
                 ],
               ),
             ),

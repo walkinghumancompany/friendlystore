@@ -257,28 +257,43 @@ class _SeasonalFoodState extends State<SeasonalFood> {
   }
   fruitContainer(int count) {
     return List.generate(count, (index) {
-      return TextButton(
-          style: TextButton.styleFrom(
-            minimumSize: Size.zero,
-            padding: EdgeInsets.zero,
-            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-          ),
-          onPressed: () {
-            Navigator.of(context).push(
+      return
+        Stack(
+          children: [
+            TextButton(
+              style: TextButton.styleFrom(
+              minimumSize: Size.zero,
+              padding: EdgeInsets.zero,
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            ),
+            onPressed: () {
+              Navigator.of(context).push(
               MaterialPageRoute(
-                builder: (context) => DetailPage(infoList: _loadFruit[index]),
+              builder: (context) => DetailPage(infoList: _loadFruit[index]),
               ),
             );
           },
           child: Container(
             width: MediaQuery.of(context).size.width,
             child: Image.asset(
-              _loadFruit[index]['image'],
-              width: MediaQuery.of(context).size.width,
-              fit: BoxFit.contain,
+                _loadFruit[index]['image'],
+                width: MediaQuery.of(context).size.width,
+                fit: BoxFit.contain,
+               ),
+              )
             ),
-          ));
-    });
+            Positioned(
+              top: 0,
+              bottom: 0,
+              left: 0,
+              right: 0,
+              child: Image.asset('assets/beforeLikebutton.png',
+              fit: BoxFit.contain,),
+            )
+          ],
+       );
+     }
+    );
   }
 
   vegetableContainer(int count) {

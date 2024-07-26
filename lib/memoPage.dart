@@ -187,7 +187,7 @@ class _MemoPageState extends State<MemoPage> with TickerProviderStateMixin {
   Widget build(BuildContext context) {
     double width = MediaQuery.of(context).size.width;
     return Scaffold(
-      resizeToAvoidBottomInset: false,
+      resizeToAvoidBottomInset: true,
       backgroundColor: Color(0xffF1EEDE),
       appBar: PreferredSize(
         preferredSize: Size.fromHeight(kToolbarHeight),
@@ -717,6 +717,9 @@ class _MemoPageState extends State<MemoPage> with TickerProviderStateMixin {
                         else Container()
                       ],
                     ),
+                  const SizedBox(
+                    height: 50,
+                  )
                 ],
               ),
             ),

@@ -231,7 +231,7 @@ class _CookingTimerState extends State<CookingTimer> with SingleTickerProviderSt
         Column(
           children: [
             const SizedBox(
-              height: 25,
+              height: 20,
             ),
             Container(
               width: width,
@@ -539,7 +539,7 @@ class _CookingTimerState extends State<CookingTimer> with SingleTickerProviderSt
               )
             ),
             const SizedBox(
-              height: 30,
+              height: 15,
             ),
             CookingTimerClass()
           ],

@@ -508,7 +508,7 @@ class _CookingTimerClassState extends State<CookingTimerClass> with SingleTicker
             )
         ),
         const SizedBox(
-          height: 20,
+          height: 50,
         )
       ],
     );

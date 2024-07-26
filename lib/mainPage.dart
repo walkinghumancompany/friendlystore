@@ -1,5 +1,6 @@
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart' as foundation;
@@ -10,6 +11,7 @@ import 'package:friendlystore/cookingTimer.dart';
 import 'package:friendlystore/memoPage.dart';
 import 'package:friendlystore/seasonalCookingPage.dart';
 import 'package:friendlystore/user.dart';
+import 'package:friendlystore/yummyPage.dart';
 import 'package:provider/provider.dart';
 import 'package:friendlystore/providers/userProvider.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -21,7 +23,6 @@ import 'mentPage.dart';
 import 'dialog.dart';
 import 'main.dart';
 import 'seasonalFoodPage.dart';
-import 'cookingTimer.dart';
 import 'dart:math';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -57,7 +58,15 @@ class _MainPageState extends State<MainPage>
     WidgetsBinding.instance?.addPostFrameCallback((_) async {
       storageLoad();
       showRecentMessagesDialog(context);
-      print('token : ${await FirebaseMessaging.instance.getToken()}');
+      try {
+        await Firebase.initializeApp();
+        await FirebaseMessaging.instance.requestPermission();
+        String? token = await FirebaseMessaging.instance.getToken();
+        print('FCM Token: $token');
+      } catch (e, stackTrace) {
+        print('Error initializing Firebase or getting FCM token: $e');
+        print('Stack trace: $stackTrace');
+      }
     });
     searchController = TextEditingController();
     now = DateTime.now();
@@ -492,16 +501,12 @@ class _MainPageState extends State<MainPage>
                                   Navigator.push(
                                     context,
                                     MaterialPageRoute(
-                                      builder: (context) => MentPage(),
+                                      builder: (context) => Yummy(),
                                     ),
                                   );
                                 },
                                 style: TextButton.styleFrom(padding: EdgeInsets.zero),
-                                child:
-                                isUpdate ?
-                                ScaleTransition(scale: _cardAnimation,
-                                  child: Image.asset('assets/card03After.png', fit: BoxFit.contain,),)
-                                    :  Image.asset('assets/card03.png', fit: BoxFit.contain)
+                                child: Image.asset('assets/card02.png', fit: BoxFit.contain),
                             ),
                           ),
                         ],

@@ -18,115 +18,118 @@ import 'package:kakao_flutter_sdk_user/kakao_flutter_sdk_user.dart' as kakao;
 
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
-  if (Firebase.apps.isEmpty) {
-    await Firebase.initializeApp(
-      options: DefaultFirebaseOptions.currentPlatform,
-    );
-  }
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  print("Handling a background message: ${message.messageId}");
 }
 
 late AndroidNotificationChannel channel;
 late FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin;
 
-void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
+Future<void> setupFCM() async {
+  FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
+
+  channel = const AndroidNotificationChannel(
+    'high_importance_channel',
+    'High Importance Notifications',
+    importance: Importance.high,
   );
-  bool _isFCMSupport = await FirebaseMessaging.instance.isSupported();
 
-  if (_isFCMSupport) {
-    FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
+  flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
+  await flutterLocalNotificationsPlugin
+      .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
+      ?.createNotificationChannel(channel);
 
-    channel = const AndroidNotificationChannel(
-      'high_importance_channel', // id
-      'High Importance Notifications', // title
+  await FirebaseMessaging.instance.setForegroundNotificationPresentationOptions(
+    alert: true,
+    badge: true,
+    sound: true,
+  );
+}
+
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  try {
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
     );
+    print("Firebase initialized successfully");
 
-    var initialzationSettingsAndroid =
-    AndroidInitializationSettings('@mipmap/ic_launcher');
+    bool isFCMSupported = await FirebaseMessaging.instance.isSupported();
+    print("FCM Support: $isFCMSupported");
 
-    var initialzationSettingsIOS = DarwinInitializationSettings(
-      requestSoundPermission: true,
-      requestBadgePermission: true,
-      requestAlertPermission: true,
-    );
-
-    flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
-    await flutterLocalNotificationsPlugin
-        .resolvePlatformSpecificImplementation<
-        AndroidFlutterLocalNotificationsPlugin>()
-        ?.createNotificationChannel(channel);
-
-    var initializationSettings = InitializationSettings(
-      android: initialzationSettingsAndroid,
-      iOS: initialzationSettingsIOS,
-    );
-
-    await flutterLocalNotificationsPlugin.initialize(
-      initializationSettings,
-    );
-
-    await FirebaseMessaging.instance.setForegroundNotificationPresentationOptions(
-      alert: true,
-      badge: true,
-      sound: true,
-    );
-    await FirebaseMessaging.instance.requestPermission(
-      alert: true,
-      announcement: false,
-      badge: true,
-      carPlay: false,
-      criticalAlert: false,
-      provisional: false,
-      sound: true,
-    );
-  }
-
-// web에서 권한요청시 오류가 발생하기 때문에 체크
-  if (!kIsWeb) {
-    // 푸시알림 권한요청
-    Map<Permission, PermissionStatus> statuses = await [
-      Permission.notification,
-    ].request();
-  }
-
-  final storage = FlutterSecureStorage();
-
-  // 저장된 전화번호 로드
-  String? savedPhone = await storage.read(key: 'storagePhone');
-
-  // 로드된 전화번호를 바탕으로 Firestore에서 사용자 정보 조회
-  User? currentUser;
-  if (savedPhone != null) {
-    final userSnapshot = await FirebaseFirestore.instance
-        .collection('users')
-        .where('phone', isEqualTo: savedPhone)
-        .limit(1)
-        .get();
-
-    // Firestore에서 가져온 사용자 정보를 User 객체로 변환
-    if (userSnapshot.docs.isNotEmpty) {
-      final userData = userSnapshot.docs.first.data();
-      currentUser = User(
-        name: userData['name'],
-        phone: userData['phone'],
-        code: userData['code'],
-      );
+    if (isFCMSupported) {
+      await setupFCM();
+      await requestNotificationPermissions();
+      String? token = await FirebaseMessaging.instance.getToken();
+      print("FCM Token: $token");
     }
+  } catch (e) {
+    print("Error initializing Firebase or setting up FCM: $e");
   }
+
+  User? currentUser = await loadCurrentUser();
+
   kakao.KakaoSdk.init(
     nativeAppKey: '1725a39c5d520837c116cfb74ef98473',
     javaScriptAppKey: '34e562ee1ee8d8de2b4aa02a286ec902',
   );
 
-
-  if (currentUser != null) {
-    print('Main: User loaded: ${currentUser.name}, ${currentUser.phone}, ${currentUser.code}');
-  } else {
-    print('Main: No user data found in secure storage.');
-  }
   runApp(FriendlyStore(currentUser: currentUser));
+}
+
+Future<void> requestNotificationPermissions() async {
+  if (!kIsWeb) {
+    try {
+      await FirebaseMessaging.instance.requestPermission(
+        alert: true,
+        announcement: false,
+        badge: true,
+        carPlay: false,
+        criticalAlert: false,
+        provisional: false,
+        sound: true,
+      );
+
+      Map<Permission, PermissionStatus> statuses = await [
+        Permission.notification,
+      ].request();
+      print("Permission statuses: $statuses");
+    } catch (e) {
+      print("Error requesting permissions: $e");
+    }
+  }
+}
+
+Future<User?> loadCurrentUser() async {
+  final storage = FlutterSecureStorage();
+  String? savedPhone = await storage.read(key: 'storagePhone');
+
+  if (savedPhone != null) {
+    try {
+      final userSnapshot = await FirebaseFirestore.instance
+          .collection('users')
+          .where('phone', isEqualTo: savedPhone)
+          .limit(1)
+          .get();
+
+      if (userSnapshot.docs.isNotEmpty) {
+        final userData = userSnapshot.docs.first.data();
+        User currentUser = User(
+          name: userData['name'],
+          phone: userData['phone'],
+          code: userData['code'],
+        );
+        print('Main: User loaded: ${currentUser.name}, ${currentUser.phone}, ${currentUser.code}');
+        return currentUser;
+      }
+    } catch (e) {
+      print('Error loading user data: $e');
+    }
+  }
+
+  print('Main: No user data found in secure storage.');
+  return null;
 }
 
 class FriendlyStore extends StatelessWidget {
@@ -139,7 +142,6 @@ class FriendlyStore extends StatelessWidget {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(
-          // currentUser가 null이 아닌 경우 userProvider에 초기화하여 제공
           create: (context) => userProvider(user: currentUser),
         ),
       ],
