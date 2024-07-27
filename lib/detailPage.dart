@@ -65,7 +65,7 @@ class _DetailPageState extends State<DetailPage> {
 
   bool isLiked = false;
 
-  Future<void> _setYummy(String code, int index) async {
+  Future<void> _setYummy(BuildContext context, String code, int index) async {
     final _userCode = _firestore.collection('users');
     QuerySnapshot<Map<String, dynamic>> userSnapshot = await _userCode.where('code', isEqualTo: code).get();
 
@@ -74,16 +74,71 @@ class _DetailPageState extends State<DetailPage> {
       return;
     }
 
-    // 사용자 문서 참조 가져오기
     DocumentReference userDocRef = userSnapshot.docs.first.reference;
+
+    // yummy 컬렉션 문서 수 확인
+    QuerySnapshot yummySnapshot = await userDocRef.collection('yummy').get();
+    if (yummySnapshot.size >= 300) {
+      // 300개 초과시 메시지 출력
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Center(
+            child: Text(
+              '최대 300개의 항목까지 저장이 됩니다.\n 기존의 항목을 삭제해 주세요.',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontFamily: 'AppleSDGothicNeo',
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+          behavior: SnackBarBehavior.floating,
+          backgroundColor: Colors.black.withOpacity(0.7),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          margin: EdgeInsets.symmetric(horizontal: 50, vertical: 30),
+        ),
+      );
+      return;
+    }
+
+    // yearYummy 컬렉션 문서 수 확인
+    QuerySnapshot yearYummySnapshot = await userDocRef.collection('yearYummy').get();
+    if (yearYummySnapshot.size >= 300) {
+      // 300개 초과시 메시지 출력
+      SnackBar(
+        content: const Center(
+          child: Text(
+            '최대 300개의 항목까지 저장이 됩니다.\n 기존의 항목을 삭제해 주세요.',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontFamily: 'AppleSDGothicNeo',
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ),
+        behavior: SnackBarBehavior.floating,
+        backgroundColor: Colors.black.withOpacity(0.7),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+        ),
+        margin: EdgeInsets.symmetric(horizontal: 50, vertical: 30),
+      );
+      return;
+    }
 
     // 현재 날짜 가져오기
     DateTime now = DateTime.now();
     String formattedDate = "${now.year}/${now.month.toString().padLeft(2, '0')}/${now.day.toString().padLeft(2, '0')}";
 
-    // yummy 하위 컬렉션에 문서 추가
+    // 새 문서 추가
     await userDocRef.collection('yummy').add({
       'date': formattedDate,
+      'index': index,
+      'timestamp': FieldValue.serverTimestamp(),
+    });
+    await userDocRef.collection('yearYummy').add({
       'index': index,
       'timestamp': FieldValue.serverTimestamp(),
     });
@@ -204,7 +259,7 @@ class _DetailPageState extends State<DetailPage> {
                   ),
                   GestureDetector(
                     onTap: () async {
-                      await _setYummy(_userProvider.user.code!, index);
+                      await _setYummy(context, _userProvider.user.code!, index);
                     },
                     child: Container(
                       width: MediaQuery.of(context).size.width * 0.13,

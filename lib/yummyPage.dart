@@ -103,14 +103,20 @@ class _YummyState extends State<Yummy> {
         DocumentReference userDocRef = userSnapshot.docs.first.reference;
 
         // yummy 컬렉션에서 해당 문서 찾기
+        QuerySnapshot yearYummySnapshot = await userDocRef.collection('yearYummy')
+            .where('index', isEqualTo: _data[index]['idx'])
+            .limit(1)
+            .get();
+
         QuerySnapshot yummySnapshot = await userDocRef.collection('yummy')
             .where('index', isEqualTo: _data[index]['idx'])
             .limit(1)
             .get();
 
-        if (yummySnapshot.docs.isNotEmpty) {
+        if (yummySnapshot.docs.isNotEmpty && yearYummySnapshot.docs.isNotEmpty) {
           // 문서 삭제
           await yummySnapshot.docs.first.reference.delete();
+          await yearYummySnapshot.docs.first.reference.delete();
 
           // 상태 업데이트
           setState(() {
@@ -352,8 +358,10 @@ class _YummyState extends State<Yummy> {
                       Align(
                         alignment: Alignment.topRight,
                         child: GestureDetector(
-                            onTap: () => deleteYummyItem(index),
-                            child:
+                              onTap: () {
+                                deleteYummyItem(index);
+                              },
+                              child:
                             const Padding(
                               padding: EdgeInsets.only(right: 20),
                               child: Text('delete',

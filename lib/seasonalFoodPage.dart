@@ -1,6 +1,9 @@
 import 'dart:convert';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:friendlystore/providers/userProvider.dart';
+import 'package:provider/provider.dart';
 import 'head.dart';
 import 'detailPage.dart';
 
@@ -13,6 +16,8 @@ class SeasonalFood extends StatefulWidget {
 
 class _SeasonalFoodState extends State<SeasonalFood> {
 
+  late userProvider _userProvider;
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   ScrollController _scrollController = ScrollController();
   late int currentImageIndex;
 
@@ -26,17 +31,61 @@ class _SeasonalFoodState extends State<SeasonalFood> {
 
   String get month => (currentImageIndex + 1).toString().padLeft(2, '0');
 
-  @override
-  void initState() {
-    super.initState();
-    DateTime now = DateTime.now();
-    currentImageIndex = now.month - 1;
-    loadData();
+  List<int> _yummyIndices = [];
+
+
+  Future<void> loadYummyData() async {
+    final userProvider _userProvider = Provider.of<userProvider>(context, listen: false);
+    String? code = _userProvider.user.code;
+    final userDoc = await _firestore.collection('users').where('code', isEqualTo: code).get();
+
+    if (userDoc.docs.isEmpty) {
+      print('사용자를 찾을 수 없습니다: $code');
+      return;
+    }
+
+    final yearYummyDocs = await userDoc.docs.first.reference.collection('yearYummy').get();
+
+    _yummyIndices = yearYummyDocs.docs.map((doc) {
+      var index = doc.data()['index'];
+      return index is int ? index : null;
+    }).whereType<int>().toList();
+
+
+    // 년도 변경 확인 및 yearYummy 컬렉션 삭제
+    await _checkAndClearYearYummy(userDoc.docs.first.reference);
   }
 
+  Future<void> _checkAndClearYearYummy(DocumentReference userDocRef) async {
+    final now = DateTime.now();
+    final lastUpdateDoc = await userDocRef.collection('lastYearYummyUpdate').doc('lastUpdate').get();
+
+    if (!lastUpdateDoc.exists || lastUpdateDoc.data()?['year'] != now.year) {
+      // yearYummy 컬렉션의 모든 문서 삭제
+      final yearYummyDocs = await userDocRef.collection('yearYummy').get();
+      for (var doc in yearYummyDocs.docs) {
+        await doc.reference.delete();
+      }
+
+      // lastUpdate 문서 업데이트 또는 생성
+      await userDocRef.collection('lastYearYummyUpdate').doc('lastUpdate').set({
+        'year': now.year,
+        'timestamp': FieldValue.serverTimestamp(),
+      });
+
+      _yummyIndices.clear(); // 로컬 리스트도 비우기
+    }
+  }
+
+  bool isYummy(int index) {
+    return _yummyIndices.contains(index);
+  }
+
+
   @override
-  void dispose() {
-    super.dispose();
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _userProvider = Provider.of<userProvider>(context);
   }
 
   Future<void> loadData() async {
@@ -65,6 +114,26 @@ class _SeasonalFoodState extends State<SeasonalFood> {
     _seafoodLength = _loadSeafood.length;
     setState(() {});
   }
+
+  @override
+  void initState() {
+    super.initState();
+    DateTime now = DateTime.now();
+    currentImageIndex = now.month - 1;
+    _loadInitialData();
+  }
+
+  Future<void> _loadInitialData() async {
+    await loadData();
+    await loadYummyData();
+    setState(() {});
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -257,6 +326,7 @@ class _SeasonalFoodState extends State<SeasonalFood> {
   }
   fruitContainer(int count) {
     return List.generate(count, (index) {
+      var fruitIndex = _loadFruit[index]['idx'];
       return
         Stack(
           children: [
@@ -282,14 +352,15 @@ class _SeasonalFoodState extends State<SeasonalFood> {
                ),
               )
             ),
-            Positioned(
-              top: 0,
-              bottom: 0,
-              left: 0,
-              right: 0,
-              child: Image.asset('assets/beforeLikebutton.png',
-              fit: BoxFit.contain,),
-            )
+            if (fruitIndex != null && isYummy(fruitIndex))
+              Positioned(
+                top: 0,
+                bottom: 0,
+                left: 0,
+                right: 0,
+                child: Image.asset('assets/beforeLikebutton.png',
+                  fit: BoxFit.contain,),
+              ),
           ],
        );
      }
@@ -298,53 +369,83 @@ class _SeasonalFoodState extends State<SeasonalFood> {
 
   vegetableContainer(int count) {
     return List.generate(count, (index) {
-      return TextButton(
-          style: TextButton.styleFrom(
-            minimumSize: Size.zero,
-            padding: EdgeInsets.zero,
-            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-          ),
-          onPressed: () {
-            Navigator.of(context).push(
-              MaterialPageRoute(
-                builder: (context) => DetailPage(infoList: _loadVegetable[index]),
+      var vegetableIndex = _loadVegetable[index]['idx'];
+      return Stack(
+        children: [
+          TextButton(
+              style: TextButton.styleFrom(
+                minimumSize: Size.zero,
+                padding: EdgeInsets.zero,
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
               ),
-            );
-          },
-          child: Container(
-            width: MediaQuery.of(context).size.width,
-            child: Image.asset(
-              _loadVegetable[index]['image'],
-              width: MediaQuery.of(context).size.width,
-              fit: BoxFit.contain,
+              onPressed: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (context) =>
+                        DetailPage(infoList: _loadVegetable[index]),
+                  ),
+                );
+              },
+              child: Container(
+                width: MediaQuery.of(context).size.width,
+                child: Image.asset(
+                  _loadVegetable[index]['image'],
+                  width: MediaQuery.of(context).size.width,
+                  fit: BoxFit.contain,
+                ),
+              )),
+          if (vegetableIndex != null && isYummy(vegetableIndex))
+            Positioned(
+              top: 0,
+              bottom: 0,
+              left: 0,
+              right: 0,
+              child: Image.asset('assets/beforeLikebutton.png',
+                fit: BoxFit.contain,),
             ),
-          ));
+        ],
+      );
     });
   }
 
   seafoodContainer(int count) {
     return List.generate(count, (index) {
-      return TextButton(
-          style: TextButton.styleFrom(
-            minimumSize: Size.zero,
-            padding: EdgeInsets.zero,
-            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-          ),
-          onPressed: () {
-            Navigator.of(context).push(
-              MaterialPageRoute(
-                builder: (context) => DetailPage(infoList: _loadSeafood[index]),
+      var seefoodIndex = _loadSeafood[index]['idx'];
+      return Stack(
+        children: [
+          TextButton(
+              style: TextButton.styleFrom(
+                minimumSize: Size.zero,
+                padding: EdgeInsets.zero,
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
               ),
-            );
-          },
-          child: Container(
-            width: MediaQuery.of(context).size.width,
-            child: Image.asset(
-              _loadSeafood[index]['image'],
-              width: MediaQuery.of(context).size.width,
-              fit: BoxFit.contain,
+              onPressed: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (context) =>
+                        DetailPage(infoList: _loadSeafood[index]),
+                  ),
+                );
+              },
+              child: Container(
+                width: MediaQuery.of(context).size.width,
+                child: Image.asset(
+                  _loadSeafood[index]['image'],
+                  width: MediaQuery.of(context).size.width,
+                  fit: BoxFit.contain,
+                ),
+              )),
+          if (seefoodIndex != null && isYummy(seefoodIndex))
+            Positioned(
+              top: 0,
+              bottom: 0,
+              left: 0,
+              right: 0,
+              child: Image.asset('assets/beforeLikebutton.png',
+                fit: BoxFit.contain,),
             ),
-          ));
+        ],
+      );
     });
   }
 }
