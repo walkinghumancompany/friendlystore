@@ -470,7 +470,7 @@ class _MainPageState extends State<MainPage>
                                 );
                               },
                               style: TextButton.styleFrom(padding: EdgeInsets.zero),
-                              child: Image.asset('assets/card01.png', fit: BoxFit.contain),
+                              child: Image.asset('assets/card04.png', fit: BoxFit.contain),
                             ),
                           ),
                           SizedBox(
@@ -506,7 +506,7 @@ class _MainPageState extends State<MainPage>
                                   );
                                 },
                                 style: TextButton.styleFrom(padding: EdgeInsets.zero),
-                                child: Image.asset('assets/card02.png', fit: BoxFit.contain),
+                                child: Image.asset('assets/card05.png', fit: BoxFit.contain),
                             ),
                           ),
                         ],

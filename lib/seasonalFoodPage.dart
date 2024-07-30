@@ -327,44 +327,44 @@ class _SeasonalFoodState extends State<SeasonalFood> {
   fruitContainer(int count) {
     return List.generate(count, (index) {
       var fruitIndex = _loadFruit[index]['idx'];
-      return
-        Stack(
-          children: [
-            TextButton(
-              style: TextButton.styleFrom(
+      return Stack(
+        children: [
+          TextButton(
+            style: TextButton.styleFrom(
               minimumSize: Size.zero,
               padding: EdgeInsets.zero,
               tapTargetSize: MaterialTapTargetSize.shrinkWrap,
             ),
             onPressed: () {
               Navigator.of(context).push(
-              MaterialPageRoute(
-              builder: (context) => DetailPage(infoList: _loadFruit[index]),
-              ),
-            );
-          },
-          child: Container(
-            width: MediaQuery.of(context).size.width,
-            child: Image.asset(
+                MaterialPageRoute(
+                  builder: (context) => DetailPage(infoList: _loadFruit[index]),
+                ),
+              );
+            },
+            child: Container(
+              width: MediaQuery.of(context).size.width,
+              child: Image.asset(
                 _loadFruit[index]['image'],
                 width: MediaQuery.of(context).size.width,
                 fit: BoxFit.contain,
-               ),
-              )
-            ),
-            if (fruitIndex != null && isYummy(fruitIndex))
-              Positioned(
-                top: 0,
-                bottom: 0,
-                left: 0,
-                right: 0,
-                child: Image.asset('assets/beforeLikebutton.png',
-                  fit: BoxFit.contain,),
               ),
-          ],
-       );
-     }
-    );
+            ),
+          ),
+          if (fruitIndex != null && isYummy(fruitIndex))
+            Positioned(
+              right: 0,  // 오른쪽에 배치
+              bottom: 0, // 하단에 배치
+              width: MediaQuery.of(context).size.width * 0.25 / 3,  // 전체 너비의 25%의 1/3
+              height: MediaQuery.of(context).size.width * 0.25 / 3, // 전체 너비의 25%의 1/3 (정사각형 유지)
+              child: Image.asset(
+                'assets/yummyCheck.png',
+                fit: BoxFit.contain,
+              ),
+            ),
+        ],
+      );
+    });
   }
 
   vegetableContainer(int count) {
@@ -373,35 +373,37 @@ class _SeasonalFoodState extends State<SeasonalFood> {
       return Stack(
         children: [
           TextButton(
-              style: TextButton.styleFrom(
-                minimumSize: Size.zero,
-                padding: EdgeInsets.zero,
-                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-              ),
-              onPressed: () {
-                Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (context) =>
-                        DetailPage(infoList: _loadVegetable[index]),
-                  ),
-                );
-              },
-              child: Container(
-                width: MediaQuery.of(context).size.width,
-                child: Image.asset(
-                  _loadVegetable[index]['image'],
-                  width: MediaQuery.of(context).size.width,
-                  fit: BoxFit.contain,
+            style: TextButton.styleFrom(
+              minimumSize: Size.zero,
+              padding: EdgeInsets.zero,
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            ),
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => DetailPage(infoList: _loadVegetable[index]),
                 ),
-              )),
+              );
+            },
+            child: Container(
+              width: MediaQuery.of(context).size.width,
+              child: Image.asset(
+                _loadVegetable[index]['image'],
+                width: MediaQuery.of(context).size.width,
+                fit: BoxFit.contain,
+              ),
+            ),
+          ),
           if (vegetableIndex != null && isYummy(vegetableIndex))
             Positioned(
-              top: 0,
-              bottom: 0,
-              left: 0,
-              right: 0,
-              child: Image.asset('assets/beforeLikebutton.png',
-                fit: BoxFit.contain,),
+              right: 0,  // 오른쪽에 배치
+              bottom: 0, // 하단에 배치
+              width: MediaQuery.of(context).size.width * 0.25 / 3,  // 전체 너비의 25%의 1/3
+              height: MediaQuery.of(context).size.width * 0.25 / 3, // 전체 너비의 25%의 1/3 (정사각형 유지)
+              child: Image.asset(
+                'assets/yummyCheck.png',
+                fit: BoxFit.contain,
+              ),
             ),
         ],
       );
@@ -414,35 +416,37 @@ class _SeasonalFoodState extends State<SeasonalFood> {
       return Stack(
         children: [
           TextButton(
-              style: TextButton.styleFrom(
-                minimumSize: Size.zero,
-                padding: EdgeInsets.zero,
-                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-              ),
-              onPressed: () {
-                Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (context) =>
-                        DetailPage(infoList: _loadSeafood[index]),
-                  ),
-                );
-              },
-              child: Container(
-                width: MediaQuery.of(context).size.width,
-                child: Image.asset(
-                  _loadSeafood[index]['image'],
-                  width: MediaQuery.of(context).size.width,
-                  fit: BoxFit.contain,
+            style: TextButton.styleFrom(
+              minimumSize: Size.zero,
+              padding: EdgeInsets.zero,
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            ),
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => DetailPage(infoList: _loadSeafood[index]),
                 ),
-              )),
+              );
+            },
+            child: Container(
+              width: MediaQuery.of(context).size.width,
+              child: Image.asset(
+                _loadSeafood[index]['image'],
+                width: MediaQuery.of(context).size.width,
+                fit: BoxFit.contain,
+              ),
+            ),
+          ),
           if (seefoodIndex != null && isYummy(seefoodIndex))
             Positioned(
-              top: 0,
-              bottom: 0,
-              left: 0,
-              right: 0,
-              child: Image.asset('assets/beforeLikebutton.png',
-                fit: BoxFit.contain,),
+              right: 0,  // 오른쪽에 배치
+              bottom: 0, // 하단에 배치
+              width: MediaQuery.of(context).size.width * 0.25 / 3,  // 전체 너비의 25%의 1/3
+              height: MediaQuery.of(context).size.width * 0.25 / 3, // 전체 너비의 25%의 1/3 (정사각형 유지)
+              child: Image.asset(
+                'assets/yummyCheck.png',
+                fit: BoxFit.contain,
+              ),
             ),
         ],
       );

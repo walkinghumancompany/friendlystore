@@ -142,6 +142,26 @@ class _DetailPageState extends State<DetailPage> {
       'index': index,
       'timestamp': FieldValue.serverTimestamp(),
     });
+    ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Center(
+            child: Text(
+              '야미야미 저장되었습니다!',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontFamily: 'AppleSDGothicNeo',
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+          behavior: SnackBarBehavior.floating,
+          backgroundColor: Colors.black.withOpacity(0.7),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          margin: EdgeInsets.symmetric(horizontal: 50, vertical: 30),
+        )
+    );
 
     print('Yummy added for user $code with index $index on $formattedDate');
   }
@@ -265,7 +285,7 @@ class _DetailPageState extends State<DetailPage> {
                       width: MediaQuery.of(context).size.width * 0.13,
                       height: 52,
                       alignment: Alignment.center,
-                      child: Image.asset(isLiked ? 'assets/afterLikebutton.png' : 'assets/beforeLikebutton.png',
+                      child: Image.asset('assets/yummyButton.png',
                         fit: BoxFit.contain, height: 52,),
                     ),
                   ),
