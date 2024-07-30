@@ -46,14 +46,17 @@ class _SeasonalFoodState extends State<SeasonalFood> {
 
     final yearYummyDocs = await userDoc.docs.first.reference.collection('yearYummy').get();
 
-    _yummyIndices = yearYummyDocs.docs.map((doc) {
+    _yummyIndices = yearYummyDocs.docs.where((doc) {
+      // 현재 선택된 월과 문서의 월이 일치하는 항목만 필터링
+      return doc.data()['month'] == currentImageIndex + 1;
+    }).map((doc) {
       var index = doc.data()['index'];
       return index is int ? index : null;
     }).whereType<int>().toList();
 
-
     // 년도 변경 확인 및 yearYummy 컬렉션 삭제
     await _checkAndClearYearYummy(userDoc.docs.first.reference);
+    setState(() {});
   }
 
   Future<void> _checkAndClearYearYummy(DocumentReference userDocRef) async {
@@ -185,11 +188,12 @@ class _SeasonalFoodState extends State<SeasonalFood> {
                       InkWell(
                         onTap: () {
                           setState(() {
-                            currentImageIndex = (currentImageIndex - 1 + 13) % 13;
+                            currentImageIndex = (currentImageIndex - 1 + 13) % 13;  // 또는 (currentImageIndex + 1) % 13
                             _loadFruit.clear();
                             _loadVegetable.clear();
                             _loadSeafood.clear();
                             loadData();
+                            loadYummyData();  // 월이 변경될 때마다 yummy 데이터 다시 로드
                           });
                           _scrollController.animateTo(
                               0.0,
@@ -216,11 +220,12 @@ class _SeasonalFoodState extends State<SeasonalFood> {
                       InkWell(
                         onTap: () {
                           setState(() {
-                            currentImageIndex = (currentImageIndex + 1) % 13;
+                            currentImageIndex = (currentImageIndex + 1 + 13) % 13;  // 또는 (currentImageIndex + 1) % 13
                             _loadFruit.clear();
                             _loadVegetable.clear();
                             _loadSeafood.clear();
                             loadData();
+                            loadYummyData();  // 월이 변경될 때마다 yummy 데이터 다시 로드
                           });
                           _scrollController.animateTo(
                               0.0,
@@ -338,7 +343,7 @@ class _SeasonalFoodState extends State<SeasonalFood> {
             onPressed: () {
               Navigator.of(context).push(
                 MaterialPageRoute(
-                  builder: (context) => DetailPage(infoList: _loadFruit[index]),
+                  builder: (context) => DetailPage(infoList: _loadFruit[index], currentMonth: currentImageIndex + 1,),
                 ),
               );
             },
@@ -381,7 +386,7 @@ class _SeasonalFoodState extends State<SeasonalFood> {
             onPressed: () {
               Navigator.of(context).push(
                 MaterialPageRoute(
-                  builder: (context) => DetailPage(infoList: _loadVegetable[index]),
+                  builder: (context) => DetailPage(infoList: _loadVegetable[index], currentMonth: currentImageIndex + 1,),
                 ),
               );
             },
@@ -424,7 +429,7 @@ class _SeasonalFoodState extends State<SeasonalFood> {
             onPressed: () {
               Navigator.of(context).push(
                 MaterialPageRoute(
-                  builder: (context) => DetailPage(infoList: _loadSeafood[index]),
+                  builder: (context) => DetailPage(infoList: _loadSeafood[index], currentMonth: currentImageIndex + 1,),
                 ),
               );
             },

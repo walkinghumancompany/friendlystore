@@ -234,7 +234,7 @@ class _YummyState extends State<Yummy> {
                     height: 15,
                   ),
                   Image.asset(
-                    'assets/beforeLikebutton.png',
+                    'assets/yummyButton.png',
                     width: 48,
                     height: 48,
                     fit: BoxFit.contain,
@@ -306,7 +306,7 @@ class _YummyState extends State<Yummy> {
                               Container(
                                 alignment: Alignment.topLeft,
                                 child: const Text(
-                                  '제철음식',
+                                  '제철',
                                   style: TextStyle(
                                     fontFamily: 'AppleSDGothicNeo',
                                     fontWeight: FontWeight.w600,
@@ -337,7 +337,7 @@ class _YummyState extends State<Yummy> {
                                             ),
                                           ),
                                           const TextSpan(
-                                            text: '를(을) 먹었어요',
+                                            text: ' YUMMY !',
                                             style: TextStyle(
                                               fontFamily: 'AppleSDGothicNeo',
                                               fontWeight: FontWeight.w500,

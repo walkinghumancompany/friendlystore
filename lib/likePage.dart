@@ -237,7 +237,8 @@ class _likePageState extends State<likePage> {
                   Navigator.of(context).push(
                     MaterialPageRoute(
                       builder: (BuildContext context) =>
-                          DetailPage(infoList: _data[index]),
+                          DetailPage(infoList: _data[index],
+                            showYummyButton: false,),
                     ),
                   );
                 },

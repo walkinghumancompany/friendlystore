@@ -1,6 +1,9 @@
 import 'dart:convert';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:friendlystore/providers/userProvider.dart';
+import 'package:provider/provider.dart';
 import 'head.dart';
 import 'detailPage.dart';
 
@@ -12,6 +15,9 @@ class SeasonalCooking extends StatefulWidget {
 }
 
 class _SeasonalCookingState extends State<SeasonalCooking> {
+
+  late userProvider _userProvider;
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   ScrollController _scrollController = ScrollController();
   late int currentImageIndex;
 
@@ -20,13 +26,76 @@ class _SeasonalCookingState extends State<SeasonalCooking> {
 
   String get month => (currentImageIndex + 1).toString().padLeft(2, '0');
 
+  List<int> _yummyIndices = [];
+
+
+  Future<void> loadYummyData() async {
+    final userProvider _userProvider = Provider.of<userProvider>(context, listen: false);
+    String? code = _userProvider.user.code;
+    final userDoc = await _firestore.collection('users').where('code', isEqualTo: code).get();
+
+    if (userDoc.docs.isEmpty) {
+      print('사용자를 찾을 수 없습니다: $code');
+      return;
+    }
+
+    final yearYummyDocs = await userDoc.docs.first.reference.collection('yearYummy').get();
+
+    _yummyIndices = yearYummyDocs.docs.map((doc) {
+      var index = doc.data()['index'];
+      return index is int ? index : null;
+    }).whereType<int>().toList();
+
+
+    // 년도 변경 확인 및 yearYummy 컬렉션 삭제
+    await _checkAndClearYearYummy(userDoc.docs.first.reference);
+  }
+
+  Future<void> _checkAndClearYearYummy(DocumentReference userDocRef) async {
+    final now = DateTime.now();
+    final lastUpdateDoc = await userDocRef.collection('lastYearYummyUpdate').doc('lastUpdate').get();
+
+    if (!lastUpdateDoc.exists || lastUpdateDoc.data()?['year'] != now.year) {
+      // yearYummy 컬렉션의 모든 문서 삭제
+      final yearYummyDocs = await userDocRef.collection('yearYummy').get();
+      for (var doc in yearYummyDocs.docs) {
+        await doc.reference.delete();
+      }
+
+      // lastUpdate 문서 업데이트 또는 생성
+      await userDocRef.collection('lastYearYummyUpdate').doc('lastUpdate').set({
+        'year': now.year,
+        'timestamp': FieldValue.serverTimestamp(),
+      });
+
+      _yummyIndices.clear(); // 로컬 리스트도 비우기
+    }
+  }
+
+  bool isYummy(int index) {
+    return _yummyIndices.contains(index);
+  }
+
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _userProvider = Provider.of<userProvider>(context);
+  }
+
 
   @override
   void initState() {
     super.initState();
     DateTime now = DateTime.now();
     currentImageIndex = now.month - 1;
-    loadData();
+    _loadInitialData();
+  }
+
+  Future<void> _loadInitialData() async {
+    await loadData();
+    await loadYummyData();
+    setState(() {});
   }
 
   @override
@@ -219,29 +288,48 @@ class _SeasonalCookingState extends State<SeasonalCooking> {
       ),
     );
   }
-  cookingImageContainer (int count) {
+  cookingImageContainer(int count) {
     return List.generate(count, (index) {
+      var cookingIndex = _loadCooking[index]['idx'];
       return TextButton(
-          style: TextButton.styleFrom(
-            minimumSize: Size.zero,
-            padding: EdgeInsets.zero,
-            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-          ),
-          onPressed: () {
-            Navigator.of(context).push(
-              MaterialPageRoute(
-                builder: (context) => DetailPage(infoList: _loadCooking[index]),
-              ),
-            );
-          },
-          child: Container(
-            width: MediaQuery.of(context).size.width,
-            height: 100,
-            child: Image.asset(
-              _loadCooking[index]['image'], fit: BoxFit.contain,
-              height: 120,
+        style: TextButton.styleFrom(
+          minimumSize: Size.zero,
+          padding: EdgeInsets.zero,
+          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+        ),
+        onPressed: () {
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (context) => DetailPage(infoList: _loadCooking[index]),
             ),
-          ));
+          );
+        },
+        child: Container(
+          width: MediaQuery.of(context).size.width,
+          height: 100,
+          child: Stack(
+            children: [
+              Positioned.fill(
+                child: Image.asset(
+                  _loadCooking[index]['image'],
+                  fit: BoxFit.contain,
+                ),
+              ),
+              if (cookingIndex != null && isYummy(cookingIndex))
+                Positioned(
+                  right: 0,
+                  bottom: 0,
+                  width: MediaQuery.of(context).size.width * 0.25 / 3,
+                  height: MediaQuery.of(context).size.width * 0.25 / 3,
+                  child: Image.asset(
+                    'assets/yummyCheck.png',
+                    fit: BoxFit.contain,
+                  ),
+                ),
+            ],
+          ),
+        ),
+      );
     });
   }
   cookingTextContainer (int count) {
@@ -267,7 +355,7 @@ class _SeasonalCookingState extends State<SeasonalCooking> {
                 children: [
                   Container(
                     alignment: Alignment.topLeft,
-                    height: 34,
+                    height: 36,
                     child: Text(
                       _loadCooking[index]['name'],
                       style: const TextStyle(
@@ -280,7 +368,7 @@ class _SeasonalCookingState extends State<SeasonalCooking> {
                     ),
                   ),
                   const SizedBox(
-                    height: 10,
+                    height: 8,
                   ),
                   Container(
                     alignment: Alignment.topLeft,

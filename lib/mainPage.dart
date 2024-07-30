@@ -483,12 +483,12 @@ class _MainPageState extends State<MainPage>
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (context) => MemoPage(),
+                                    builder: (context) => Yummy(),
                                   ),
                                 );
                               },
                               style: TextButton.styleFrom(padding: EdgeInsets.zero),
-                              child: Image.asset('assets/card02.png', fit: BoxFit.contain),
+                              child: Image.asset('assets/card05.png', fit: BoxFit.contain),
                             ),
                           ),
                           SizedBox(
@@ -501,12 +501,12 @@ class _MainPageState extends State<MainPage>
                                   Navigator.push(
                                     context,
                                     MaterialPageRoute(
-                                      builder: (context) => Yummy(),
+                                      builder: (context) => MemoPage(),
                                     ),
                                   );
                                 },
                                 style: TextButton.styleFrom(padding: EdgeInsets.zero),
-                                child: Image.asset('assets/card05.png', fit: BoxFit.contain),
+                                child: Image.asset('assets/card06.png', fit: BoxFit.contain),
                             ),
                           ),
                         ],
@@ -687,7 +687,7 @@ class _MainPageState extends State<MainPage>
       Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (context) => DetailPage(infoList: infoList[foundIndex!]),
+          builder: (context) => DetailPage(infoList: infoList[foundIndex!], showYummyButton: false,),
         ),
       );
     } else if (searchText.isNotEmpty) {  // <-- 추가된 조건

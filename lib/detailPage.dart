@@ -5,8 +5,15 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'head.dart';
 
 class DetailPage extends StatefulWidget {
-  const DetailPage({Key? key, required this.infoList}) : super(key: key);
+  const DetailPage({Key? key,
+    required this.infoList,
+    this.currentMonth,
+    this.showYummyButton = true,
+  }) : super(key: key);
   final Map<String, dynamic> infoList;
+  final int? currentMonth;
+  final bool showYummyButton;
+
 
   @override
   _DetailPageState createState() => _DetailPageState();
@@ -131,6 +138,7 @@ class _DetailPageState extends State<DetailPage> {
     // 현재 날짜 가져오기
     DateTime now = DateTime.now();
     String formattedDate = "${now.year}/${now.month.toString().padLeft(2, '0')}/${now.day.toString().padLeft(2, '0')}";
+    int currentMonth = widget.currentMonth ?? DateTime.now().month;
 
     // 새 문서 추가
     await userDocRef.collection('yummy').add({
@@ -140,8 +148,10 @@ class _DetailPageState extends State<DetailPage> {
     });
     await userDocRef.collection('yearYummy').add({
       'index': index,
+      'month': currentMonth,
       'timestamp': FieldValue.serverTimestamp(),
     });
+
     ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: const Center(
@@ -277,7 +287,8 @@ class _DetailPageState extends State<DetailPage> {
                   SizedBox(
                     width: MediaQuery.of(context).size.width * 0.02,
                   ),
-                  GestureDetector(
+                  widget.showYummyButton  // 조건부 렌더링
+                      ? GestureDetector(
                     onTap: () async {
                       await _setYummy(context, _userProvider.user.code!, index);
                     },
@@ -288,7 +299,8 @@ class _DetailPageState extends State<DetailPage> {
                       child: Image.asset('assets/yummyButton.png',
                         fit: BoxFit.contain, height: 52,),
                     ),
-                  ),
+                  )
+                      : SizedBox.shrink(),
                   SizedBox(
                     width: MediaQuery.of(context).size.width * 0.02,
                   )
