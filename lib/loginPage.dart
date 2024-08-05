@@ -470,23 +470,27 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   bool isValidPin(String codeController) {
-    if (codeController.length != 8) return false;
-    if (codeController[1] != '2') return false;
+    // 1. 길이 확인
+    if (codeController.length != 7) return false;
 
-    bool isPrime(int number) {
-      if (number < 2) return false;
-      for (int i = 2; i * i <= number; i++) {
-        if (number % i == 0) return false;
-      }
-      return true;
-    }
+    // 2. 첫 번째 자리 짝수 확인
+    if (int.parse(codeController[0]) % 2 != 0) return false;
 
-    String lastThreeStr = codeController.substring(5, 8);
-    if (lastThreeStr == '000') return true;
+    // 3. 두 번째 자리 홀수 확인
+    if (int.parse(codeController[1]) % 2 == 0) return false;
 
-    int lastThree = int.tryParse(codeController.substring(5, 8)) ?? 0;
+    // 4. 마지막 세 자리 소수 확인
+    int lastThree = int.tryParse(codeController.substring(4)) ?? 0;
     if (!isPrime(lastThree)) return false;
 
+    return true;
+  }
+
+  bool isPrime(int number) {
+    if (number < 2) return false;
+    for (int i = 2; i * i <= number; i++) {
+      if (number % i == 0) return false;
+    }
     return true;
   }
 
