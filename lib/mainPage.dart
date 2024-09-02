@@ -655,7 +655,7 @@ class _MainPageState extends State<MainPage>
       return false;
     }).toList();
 
-    int randomNumber = Random().nextInt(6) + 1;
+    int randomNumber = Random().nextInt(10) + 1;
     targetData = filteredList.firstWhere(
             (element) => element['number'] == randomNumber,
         orElse: () => null);
