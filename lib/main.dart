@@ -61,8 +61,6 @@ Future<void> main() async {
     if (isFCMSupported) {
       await setupFCM();
       await requestNotificationPermissions();
-      String? token = await FirebaseMessaging.instance.getToken();
-      print("FCM Token: $token");
     }
   } catch (e) {
     print("Error initializing Firebase or setting up FCM: $e");
