@@ -1,4 +1,3 @@
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
@@ -58,15 +57,6 @@ class _MainPageState extends State<MainPage>
     WidgetsBinding.instance?.addPostFrameCallback((_) async {
       storageLoad();
       showRecentMessagesDialog(context);
-      try {
-        await Firebase.initializeApp();
-        await FirebaseMessaging.instance.requestPermission();
-        String? token = await FirebaseMessaging.instance.getToken();
-        print('FCM Token: $token');
-      } catch (e, stackTrace) {
-        print('Error initializing Firebase or getting FCM token: $e');
-        print('Stack trace: $stackTrace');
-      }
     });
     searchController = TextEditingController();
     now = DateTime.now();

@@ -1,5 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.friendlystore.naver.friendlystore">
+    package="com.friendly.book.friendlybook"> <!-- 여기에 실제 패키지 이름을 넣으세요 -->
 
     <uses-permission android:name="android.permission.INTERNET"/>
     <uses-permission android:name="android.permission.WAKE_LOCK"/>
@@ -33,32 +34,16 @@
 
         <!-- Firebase Messaging Service -->
         <service
-            android:name="io.flutter.plugins.firebase.messaging.FlutterFirebaseMessagingService"
+            android:name=".FirebaseMessagingService"
             android:exported="false">
             <intent-filter>
                 <action android:name="com.google.firebase.MESSAGING_EVENT" />
             </intent-filter>
         </service>
 
-        <!-- Firebase Messaging Receiver -->
-        <receiver
-            android:name="io.flutter.plugins.firebase.messaging.FlutterFirebaseMessagingReceiver"
-            android:exported="true"
-            android:permission="com.google.android.c2dm.permission.SEND">
-            <intent-filter>
-                <action android:name="com.google.android.c2dm.intent.RECEIVE" />
-            </intent-filter>
-        </receiver>
-
         <meta-data
             android:name="flutterEmbedding"
             android:value="2" />
-
-        <meta-data
-            android:name="com.google.firebase.messaging.default_notification_channel_id"
-            android:value="high_importance_channel" />
-
-        <!-- Optional: FCM icon setting -->
     </application>
 
     <queries>
