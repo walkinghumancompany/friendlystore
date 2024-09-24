@@ -1,3 +1,4 @@
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
@@ -49,12 +50,15 @@ class _MainPageState extends State<MainPage>
   bool isUpdate = false;
   bool isLoading = true;
   String? checkPhone;
+  late FirebaseMessaging _firebaseMessaging;
 
   @override
   void initState() {
     super.initState();
+    _firebaseMessaging = FirebaseMessaging.instance;
     setupInteractedMessage();
     WidgetsBinding.instance?.addPostFrameCallback((_) async {
+      fcmTokenInit();
       storageLoad();
       showRecentMessagesDialog(context);
     });
@@ -72,6 +76,28 @@ class _MainPageState extends State<MainPage>
       }
     });
     _cardController.forward(); // 초기 애니메이션 시작
+  }
+
+  // FCM 정보
+  fcmTokenInit() {
+    // FCM 토큰 가져오기
+    _firebaseMessaging.getToken().then((String? token) {
+      if (token != null) {
+        print("FCM 등록 토큰: $token");
+
+        // 토큰을 UI나 로그로 출력 (예: 로그 및 Toast 메시지)
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("FCM 토큰: $token")),
+        );
+      } else {
+        print("FCM 토큰 로드 실패");
+      }
+    }).catchError((error) async {
+      print("Error fetching FCM token: $error");
+      // await FirebaseMessaging.instance.deleteToken(); // 기존 토큰 삭제
+      // String? token = await FirebaseMessaging.instance.getToken(); // 새 토큰 가져오기
+      // print("New FCM Token: $token");
+    });
   }
 
   Future<void> setupInteractedMessage() async {
