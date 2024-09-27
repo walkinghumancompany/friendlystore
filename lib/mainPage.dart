@@ -86,9 +86,9 @@ class _MainPageState extends State<MainPage>
         print("FCM 등록 토큰: $token");
 
         // 토큰을 UI나 로그로 출력 (예: 로그 및 Toast 메시지)
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("FCM 토큰: $token")),
-        );
+        // ScaffoldMessenger.of(context).showSnackBar(
+        //   SnackBar(content: Text("FCM 토큰: $token")),
+        // );
       } else {
         print("FCM 토큰 로드 실패");
       }
@@ -607,7 +607,7 @@ class _MainPageState extends State<MainPage>
                       child: TextButton(
                         style: TextButton.styleFrom(padding: EdgeInsets.zero),
                         onPressed: () async {
-                          const url = 'https://www.friendlystore.co.kr';
+                          const url = 'https://smartstore.naver.com/friendly_store';
                           if (await canLaunch(url)) {
                             await launch(url);
                           } else {
