@@ -3,13 +3,13 @@
 <plist version="1.0">
 <dict>
 	<key>API_KEY</key>
-	<string>AIzaSyDjVlTNynndVI4rd49K4gkN4RFp6uFUWxg</string>
+	<string>AIzaSyBVD-F_Jr4JMmH9G72D4pZv3DNH1N0L-6I</string>
 	<key>GCM_SENDER_ID</key>
 	<string>1041664197972</string>
 	<key>PLIST_VERSION</key>
 	<string>1</string>
 	<key>BUNDLE_ID</key>
-	<string>com.friendlystore.naver.friendlystore</string>
+	<string>com.friendly.book.friendlybook</string>
 	<key>PROJECT_ID</key>
 	<string>friendly-book-f13f9</string>
 	<key>STORAGE_BUCKET</key>
@@ -25,6 +25,6 @@
 	<key>IS_SIGNIN_ENABLED</key>
 	<true></true>
 	<key>GOOGLE_APP_ID</key>
-	<string>1:1041664197972:ios:a588f5e63b096c19b674c1</string>
+	<string>1:1041664197972:ios:0b14d4466a6ba340b674c1</string>
 </dict>
 </plist>

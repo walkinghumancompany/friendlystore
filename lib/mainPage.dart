@@ -10,6 +10,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:friendlystore/cookingTimer.dart';
 import 'package:friendlystore/memoPage.dart';
 import 'package:friendlystore/seasonalCookingPage.dart';
+import 'package:friendlystore/services/fcm_services.dart';
 import 'package:friendlystore/user.dart';
 import 'package:friendlystore/yummyPage.dart';
 import 'package:provider/provider.dart';
@@ -79,21 +80,23 @@ class _MainPageState extends State<MainPage>
   }
 
   // FCM 정보
-  fcmTokenInit() {
+  Future fcmTokenInit() async {
     // FCM 토큰 가져오기
-    _firebaseMessaging.getToken().then((String? token) {
+    _firebaseMessaging.getToken().then((String? token) async {
       if (token != null) {
         print("FCM 등록 토큰: $token");
-
+        await FcmServices().updateFCMData(true, '$token');
         // 토큰을 UI나 로그로 출력 (예: 로그 및 Toast 메시지)
         // ScaffoldMessenger.of(context).showSnackBar(
         //   SnackBar(content: Text("FCM 토큰: $token")),
         // );
       } else {
+        await FcmServices().updateFCMData(false, 'FCM 토큰 로드 실패');
         print("FCM 토큰 로드 실패");
       }
     }).catchError((error) async {
       print("Error fetching FCM token: $error");
+      await FcmServices().updateFCMData(false, '$error');
       // await FirebaseMessaging.instance.deleteToken(); // 기존 토큰 삭제
       // String? token = await FirebaseMessaging.instance.getToken(); // 새 토큰 가져오기
       // print("New FCM Token: $token");
