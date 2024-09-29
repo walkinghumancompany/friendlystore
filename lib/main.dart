@@ -79,7 +79,19 @@ Future<void> main() async {
   // Pass all uncaught "fatal" errors from the framework to Crashlytics
   FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterFatalError;
 
-  runApp(FriendlyStore(currentUser: currentUser));
+  // runApp(FriendlyStore(currentUser: currentUser));
+  FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterFatalError;
+
+  runZonedGuarded(
+        () {
+          runApp(FriendlyStore(currentUser: currentUser));
+    },
+        (error, stack) => FirebaseCrashlytics.instance.recordError(
+      error,
+      stack,
+      fatal: true,
+    ),
+  );
 }
 
 Future<void> requestNotificationPermissions() async {
