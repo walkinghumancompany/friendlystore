@@ -25,6 +25,8 @@ if (flutterVersionName == null) {
     flutterVersionName = '1.0'
 }
 
+apply plugin: 'com.google.firebase.crashlytics'
+
 android {
     namespace "com.friendly.book.friendlybook"
     compileSdkVersion 34

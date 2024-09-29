@@ -1,4 +1,7 @@
+import 'dart:async';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
@@ -72,6 +75,9 @@ Future<void> main() async {
     nativeAppKey: '1725a39c5d520837c116cfb74ef98473',
     javaScriptAppKey: '34e562ee1ee8d8de2b4aa02a286ec902',
   );
+
+  // Pass all uncaught "fatal" errors from the framework to Crashlytics
+  FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterFatalError;
 
   runApp(FriendlyStore(currentUser: currentUser));
 }
