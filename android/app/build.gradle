@@ -62,17 +62,23 @@ android {
 
     signingConfigs {
         release {
-            storeFile file('../keystore/key.jks')
-            storePassword file('../keystore/keystore.password').text.trim()
+            keyAlias 'upload'
             keyPassword file('../keystore/keystore.password').text.trim()
-            keyAlias 'key'
+            storeFile file('../keystore/newKey.jks')
+            storePassword file('../keystore/keystore.password').text.trim()
         }
     }
 
     buildTypes {
         release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
+            signingConfig signingConfigs.release
+            // 이 설정을 추가하여 코드 축소 및 리소스 축소를 활성화
+            minifyEnabled true
+            shrinkResources true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+
+        debug {
             signingConfig signingConfigs.debug
         }
     }
