@@ -2,7 +2,7 @@ name: friendlystore
 description: "다정한제철음식사전"
 publish_to: 'none'
 
-version: 1.8.0+16
+version: 1.8.1+17
 
 environment:
   sdk: '>=2.19.0 <4.0.0'

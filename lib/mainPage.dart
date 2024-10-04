@@ -680,9 +680,11 @@ class _MainPageState extends State<MainPage>
         orElse: () => null);
 
     if (targetData != null) {
-      setState(() {
-        recommendCooking = [targetData['image']];
-      });
+      if(mounted) {
+        setState(() {
+          recommendCooking = [targetData['image']];
+        });
+      }
     }
 
   }

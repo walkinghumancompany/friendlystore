@@ -82,16 +82,7 @@ Future<void> main() async {
   // runApp(FriendlyStore(currentUser: currentUser));
   FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterFatalError;
 
-  runZonedGuarded(
-        () {
-          runApp(FriendlyStore(currentUser: currentUser));
-    },
-        (error, stack) => FirebaseCrashlytics.instance.recordError(
-      error,
-      stack,
-      fatal: true,
-    ),
-  );
+  runApp(FriendlyStore(currentUser: currentUser));
 }
 
 Future<void> requestNotificationPermissions() async {
