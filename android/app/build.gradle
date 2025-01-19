@@ -90,8 +90,12 @@ flutter {
 
 dependencies {
     implementation platform('com.google.firebase:firebase-bom:32.7.2')
+
+    // 필요한 Firebase 서비스만 유지
     implementation 'com.google.firebase:firebase-analytics'
-    implementation 'com.google.firebase:firebase-messaging'
-    implementation platform('com.google.firebase:firebase-bom:31.0.2')  // Firebase BOM 사용
-    implementation 'com.google.firebase:firebase-messaging'              // Firebase Messaging 최신 버전
+    implementation 'com.google.firebase:firebase-installations'
+    implementation 'com.google.firebase:firebase-firestore'
+
+    // Google Play Services
+    implementation 'com.google.android.gms:play-services-base:18.2.0'
 }

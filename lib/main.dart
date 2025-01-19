@@ -1,16 +1,10 @@
 import 'dart:async';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_crashlytics/firebase_crashlytics.dart';
-import 'package:firebase_messaging/firebase_messaging.dart';
-import 'package:flutter/foundation.dart';
-import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:friendlystore/user.dart';
-import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
 import 'package:friendlystore/providers/userProvider.dart';
 import 'firebase_options.dart';
@@ -19,55 +13,30 @@ import 'mainPage.dart';
 import 'managerPage.dart';
 import 'package:kakao_flutter_sdk_user/kakao_flutter_sdk_user.dart' as kakao;
 
-@pragma('vm:entry-point')
-Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
-  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-  print("Handling a background message: ${message.messageId}");
-}
-
-late AndroidNotificationChannel channel;
-late FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin;
-
-Future<void> setupFCM() async {
-  FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
-
-  channel = const AndroidNotificationChannel(
-    'high_importance_channel',
-    'High Importance Notifications',
-    importance: Importance.high,
-  );
-
-  flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
-  await flutterLocalNotificationsPlugin
-      .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
-      ?.createNotificationChannel(channel);
-
-  await FirebaseMessaging.instance.setForegroundNotificationPresentationOptions(
-    alert: true,
-    badge: true,
-    sound: true,
-  );
+Future<void> initializeFirebase() async {
+  try {
+    // 이미 초기화된 Firebase 앱이 있는지 확인
+    FirebaseApp? app;
+    try {
+      app = Firebase.app();
+      print("Existing Firebase app found");
+    } catch (e) {
+      // 초기화된 앱이 없는 경우
+      app = await Firebase.initializeApp(
+        options: DefaultFirebaseOptions.currentPlatform,
+      );
+      print("New Firebase app initialized");
+    }
+  } catch (e) {
+    print("Firebase initialization error: $e");
+  }
 }
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  try {
-    await Firebase.initializeApp(
-      options: DefaultFirebaseOptions.currentPlatform,
-    );
-    print("Firebase initialized successfully");
-
-    bool isFCMSupported = await FirebaseMessaging.instance.isSupported();
-    print("FCM Support: $isFCMSupported");
-
-    if (isFCMSupported) {
-      await setupFCM();
-      await requestNotificationPermissions();
-    }
-  } catch (e) {
-    print("Error initializing Firebase or setting up FCM: $e");
-  }
+  // Firebase 초기화
+  await initializeFirebase();
 
   User? currentUser = await loadCurrentUser();
 
@@ -76,36 +45,7 @@ Future<void> main() async {
     javaScriptAppKey: '34e562ee1ee8d8de2b4aa02a286ec902',
   );
 
-  // Pass all uncaught "fatal" errors from the framework to Crashlytics
-  FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterFatalError;
-
-  // runApp(FriendlyStore(currentUser: currentUser));
-  FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterFatalError;
-
   runApp(FriendlyStore(currentUser: currentUser));
-}
-
-Future<void> requestNotificationPermissions() async {
-  if (!kIsWeb) {
-    try {
-      await FirebaseMessaging.instance.requestPermission(
-        alert: true,
-        announcement: false,
-        badge: true,
-        carPlay: false,
-        criticalAlert: false,
-        provisional: false,
-        sound: true,
-      );
-
-      Map<Permission, PermissionStatus> statuses = await [
-        Permission.notification,
-      ].request();
-      print("Permission statuses: $statuses");
-    } catch (e) {
-      print("Error requesting permissions: $e");
-    }
-  }
 }
 
 Future<User?> loadCurrentUser() async {
@@ -156,7 +96,7 @@ class FriendlyStore extends StatelessWidget {
         debugShowCheckedModeBanner: false,
         title: 'friendlybook',
         color: Color(0xffF1EEDE),
-        initialRoute: "/mainPage",
+        initialRoute: currentUser == null ? '/loginPage' : '/mainPage',
         routes: {
           '/managerPage': ((context) => ManagerPage()),
           '/loginPage': ((context) => LoginPage()),

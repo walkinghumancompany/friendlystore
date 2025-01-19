@@ -2,7 +2,7 @@
   "project_info": {
     "project_number": "1041664197972",
     "project_id": "friendly-book-f13f9",
-    "storage_bucket": "friendly-book-f13f9.appspot.com"
+    "storage_bucket": "friendly-book-f13f9.firebasestorage.app"
   },
   "client": [
     {

@@ -1,16 +1,11 @@
 
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_core/firebase_core.dart';
-import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/cupertino.dart';
-import 'package:flutter/foundation.dart' as foundation;
 import 'package:flutter/material.dart';
-import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:friendlystore/cookingTimer.dart';
 import 'package:friendlystore/memoPage.dart';
 import 'package:friendlystore/seasonalCookingPage.dart';
-import 'package:friendlystore/services/fcm_services.dart';
 import 'package:friendlystore/user.dart';
 import 'package:friendlystore/yummyPage.dart';
 import 'package:provider/provider.dart';
@@ -25,7 +20,6 @@ import 'dialog.dart';
 import 'main.dart';
 import 'seasonalFoodPage.dart';
 import 'dart:math';
-import 'package:shared_preferences/shared_preferences.dart';
 
 
 
@@ -51,17 +45,12 @@ class _MainPageState extends State<MainPage>
   bool isUpdate = false;
   bool isLoading = true;
   String? checkPhone;
-  late FirebaseMessaging _firebaseMessaging;
 
   @override
   void initState() {
     super.initState();
-    _firebaseMessaging = FirebaseMessaging.instance;
-    setupInteractedMessage();
     WidgetsBinding.instance?.addPostFrameCallback((_) async {
-      fcmTokenInit();
       storageLoad();
-      showRecentMessagesDialog(context);
     });
     searchController = TextEditingController();
     now = DateTime.now();
@@ -79,231 +68,6 @@ class _MainPageState extends State<MainPage>
     _cardController.forward(); // 초기 애니메이션 시작
   }
 
-  // FCM 정보
-  Future fcmTokenInit() async {
-    // FCM 토큰 가져오기
-    _firebaseMessaging.getToken().then((String? token) async {
-      if (token != null) {
-        print("FCM 등록 토큰: $token");
-        await FcmServices().updateFCMData(true, '$token');
-        // 토큰을 UI나 로그로 출력 (예: 로그 및 Toast 메시지)
-        // ScaffoldMessenger.of(context).showSnackBar(
-        //   SnackBar(content: Text("FCM 토큰: $token")),
-        // );
-      } else {
-        await FcmServices().updateFCMData(false, 'FCM 토큰 로드 실패');
-        print("FCM 토큰 로드 실패");
-      }
-    }).catchError((error) async {
-      print("Error fetching FCM token: $error");
-      await FcmServices().updateFCMData(false, '$error');
-      // await FirebaseMessaging.instance.deleteToken(); // 기존 토큰 삭제
-      // String? token = await FirebaseMessaging.instance.getToken(); // 새 토큰 가져오기
-      // print("New FCM Token: $token");
-    });
-  }
-
-  Future<void> setupInteractedMessage() async {
-    RemoteMessage? initialMessage =
-    await FirebaseMessaging.instance.getInitialMessage();
-
-    debugPrint('메세지 ${initialMessage?.notification?.title}');
-
-    if (initialMessage != null) {
-      _handleMessage(initialMessage);
-    }
-
-    try {
-      if (foundation.defaultTargetPlatform != foundation.TargetPlatform.iOS) {
-        FirebaseMessaging.onMessage.listen((event) {showMessage(event);});
-      }
-    } catch(e) {
-      debugPrint('onMessage try error :${e}');
-    }
-    FirebaseMessaging.onMessageOpenedApp.listen(_handleMessage);
-  }
-
-  void _handleMessage(RemoteMessage message) async {
-    try {
-      debugPrint('message.data : ${message.data}');
-      Map<String, dynamic> messageData = message.data;
-      String click_action = messageData['click_action'] ?? '';
-
-      if (click_action.isNotEmpty) {
-        final Uri _url = Uri.parse(click_action);
-        if (!await launchUrl(_url)) {
-        }
-      }
-    } catch(e) {
-      print('error handleMessage ${e}');
-    }
-  }
-
-  showMessage(RemoteMessage? message) {
-
-    RemoteNotification? notification = message?.notification;
-    AndroidNotification? android = message?.notification?.android;
-    var data = message?.data;
-    var androidNotiDetails = AndroidNotificationDetails(
-      channel.id,
-      channel.name,
-      importance: Importance.high,
-    );
-
-    var iOSNotiDetails = const DarwinNotificationDetails();
-    var details =
-    NotificationDetails(android: androidNotiDetails, iOS: iOSNotiDetails);
-    if (data != null) {
-      flutterLocalNotificationsPlugin.show(
-        notification.hashCode,
-        message?.notification?.title,
-        message?.notification?.body,
-        details,
-        payload: 'data',
-      );
-    }
-  }
-
-  void showRecentMessagesDialog(BuildContext context) async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    bool doNotShowAgain = prefs.getBool('doNotShowAgain') ?? false;
-    String lastShownMessageTimestamp = prefs.getString('lastShownMessageTimestamp') ?? '';
-
-    FirebaseFirestore firestore = FirebaseFirestore.instance;
-    List<String> messages = [];
-    QuerySnapshot querySnapshot = await firestore.collection('message')
-        .orderBy('messageId', descending: true) // 'updatedAt' 필드로 문서를 내림차순 정렬
-        .limit(1) // 가장 최근 문서만 가져옴
-        .get();
-
-    if (querySnapshot.docs.isNotEmpty) {
-      final mostRecentDoc = querySnapshot.docs.first;
-      final data = mostRecentDoc.data() as Map<String, dynamic>?;
-      if (data != null && data.containsKey('message')) {
-        String currentMessageTimestamp = data['messageId'];
-        DateTime now = DateTime.now();
-        DateTime messageDate = DateTime.parse(currentMessageTimestamp);
-
-        if (currentMessageTimestamp != lastShownMessageTimestamp) {
-          // 새로운 문서가 업데이트 되었으므로 doNotShowAgain을 false로 설정
-          await prefs.setBool('doNotShowAgain', false);
-          doNotShowAgain = false;
-          await prefs.setString('lastShownMessageTimestamp', currentMessageTimestamp);
-        }
-
-        if (!doNotShowAgain && now.difference(messageDate).inDays < 3) {
-          messages.add((data['message'] as String?) ?? '');
-          // 메시지가 2분 이내에 업데이트된 경우에만 팝업 표시
-          showDialog(
-            context: context,
-            builder: (BuildContext context) {
-              return AlertDialog(
-                backgroundColor: Color(0xffF1EEDE),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(15),
-                ),
-                title: const Row(
-                  children: [
-                    Icon(
-                      Icons.volume_up,  // 확성기 아이콘
-                      color: Color(0xffFF6836),  // 아이콘 색상
-                    ),
-                    SizedBox(width: 10),  // 아이콘과 텍스트 사이의 간격
-                    Text(
-                      '새로운 소식',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Color(0xffFF6836),
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ],
-                ),
-                content: SingleChildScrollView(
-                  child: ListBody(
-                    children: messages.map((message) => Text(message)).toList(),
-                  ),
-                ),
-                actions: <Widget>[
-                  Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      Container(
-                        alignment: Alignment.topCenter,
-                        child: TextButton(
-                          style: ButtonStyle(
-                            backgroundColor: MaterialStateProperty.all(Color(0xffF1EEDE)),
-                            shape: MaterialStateProperty.all(
-                              RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(10), // 원하는 모서리 둥근 정도를 설정하세요
-                                side: const BorderSide(
-                                  color: Colors.grey, // 원하는 보더 색상을 설정하세요
-                                  width: 0.5, // 원하는 보더 두께를 설정하세요
-                                ),
-                              ),
-                            ),
-                            // 여기에 boxShadow 추가
-                            shadowColor: MaterialStateProperty.all(Colors.grey.withOpacity(0.5)),
-                            elevation: MaterialStateProperty.all(3),
-                          ),
-                          onPressed: () async {
-                            FirebaseFirestore.instance
-                                .collection('link')
-                                .doc('friendly') // 여기에 Firestore 문서 ID를 넣으세요
-                                .get()
-                                .then((doc) {
-                              if (doc.exists && doc.data()!.containsKey('linkUrl')) {
-                                String url = doc.data()!['linkUrl'];
-                                _launchURL(url); // URL 열기
-                              }
-                            });
-                          },
-                          child: const Text('더 알아보기',
-                            style: TextStyle(
-                              color: Color(0xffFF6836),
-                            ),
-                          ),
-                        ),
-                      ),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Container(
-                            child: TextButton(
-                              child: const Text('다시보지않기'),
-                              onPressed: () async {
-                                await prefs.setBool('doNotShowAgain', true);
-                                Navigator.of(context).pop();
-                              },
-                            ),
-                          ),
-                          Spacer(),
-                          Container(
-                            child: TextButton(
-                              child: const Text('닫기'),
-                              onPressed: () {
-                                Navigator.of(context).pop();
-                              },
-                            ),
-                          )
-                        ],
-                      )
-                    ],
-                  )
-                ],
-              );
-            },
-          );
-        }
-      }
-    }
-  }
-
-
-  void _launchURL(String url) async {
-    if (!await launch(url)) throw 'Could not launch $url';
-  }
 
   void storageLoad() async {
     final FlutterSecureStorage storage = FlutterSecureStorage();
